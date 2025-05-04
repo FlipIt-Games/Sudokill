@@ -1,8 +1,16 @@
-include_directories(
-    src    
-)
+cmake_minimum_required(VERSION 3.15)
+project(sudokill VERSION 0.1 LANGUAGES CXX)
 
-add_executable(sudokill_app
-    src/game.cpp
-    src/main.cpp
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+set(SDL3_DIR deps/SDL/cmake)
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}
 )
