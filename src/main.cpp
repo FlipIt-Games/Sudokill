@@ -1,12 +1,7 @@
-#include <cassert>
 #include <clocale>
-#include <cstdio>
-#include <cstring>
 #include <cwchar>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
 
 #include "game.h"
 #include "box_chars.h"
@@ -59,8 +54,15 @@ wchar_t *stat_str;
 wchar_t *grid_str;
 wchar_t *logs_str;
 
+bool debug_grid = false;
+
 int main(int argc, char **argv) {
     // INITIALIZATION
+
+    if (argc >= 2) {
+        debug_grid = strcmp(argv[1], "debug");
+    }
+
     setlocale(LC_ALL, "en_US.UTF-8");
 
     row_length = (grid_size * (col_per_cell + 1) + 2);
@@ -84,18 +86,18 @@ int main(int argc, char **argv) {
     while(true) {
         print_stats();
         print_grid();
-        printf("Where are you gonna go next?. Input a cardinal direction (N, E, W, S, NW, NE, SW, SE)\n");
-        fgets(input, 10, stdin);
+        printf("Where are you gonna go next?. Input a direction (W, A, S, D)\n");
+        // fgets(input, 10, stdin);
+        
+        while(true) {
+
+        }
 
         game::Direction direction;
-        if (input[0] == 'N' && input[1] == 'E')         { direction = game::Direction::North_East; }
-        else if (input[0] == 'N' && input[1] == 'W')    { direction = game::Direction::North_West; }
-        else if (input[0] == 'N')                       { direction = game::Direction::North; }
-        else if (input[0] == 'S' && input[1] == 'E')    { direction = game::Direction::South_East; }
-        else if (input[0] == 'S' && input[1] == 'W')    { direction = game::Direction::South_West; }
-        else if (input[0] == 'S')                       { direction = game::Direction::South; }
-        else if (input[0] == 'E')                       { direction = game::Direction::East; }
-        else if (input[0] == 'W')                       { direction = game::Direction::West; }
+        if (input[0] == 'W')        { direction = game::Direction::North; }
+        else if (input[0] == 'A')   { direction = game::Direction::West; }
+        else if (input[0] == 'S')   { direction = game::Direction::South; }
+        else if (input[0] == 'D')   { direction = game::Direction::East; }
         else { continue; }
 
         game::move_player(direction);
@@ -121,25 +123,7 @@ skip_input:
                     break;
                 case game::Pickup::Gold:
                     printf("You found %d gold\n", game::enemy_grid[game::player_position]);
-                    while (game::player_gold >= game::player_gold_to_next_upgrade) {
-                        printf("You can buy a new upgrade.\n");
-                        printf("Enter H to upgrade Health.\n");
-                        printf("Enter S to upgrade Stamina.\n");
-                        printf("Enter D to upgrade Damage.\n");
-
-                        fgets(input, 10, stdin);
-                        switch (input[0]) {
-                            case 'H': game::player_max_health += 3; break;
-                            case 'S': game::player_max_stamina += 3; break;
-                            case 'D': game::player_damage += 1; break;
-                        }
-
-                        game::player_gold -= game::player_gold_to_next_upgrade;
-                        game::player_gold_to_next_upgrade += 1;
-                        print_grid();
-                        print_stats();
-                        clear_logs();
-                    }
+                    
                     break;
                 case game::Pickup::Palantir: {
                    printf("You found a vision stone. Enter the coodinate of a cell you'd like to peek at.\n");
@@ -152,11 +136,12 @@ skip_input:
                    break;
                 }
                 case game::Pickup::Arrow: {
-                    printf("You found an arrow you can shoot a cell and inflict damage to it\n");
+                    printf("You found an arrow. You can shoot a cell and inflict damage to it\n");
                     fgets(input, 10, stdin);
                     auto idx_to_shoot = ((input[0] - 'A') * 9) + input[1] - '1';
                     if (game::cell_states[idx_to_shoot] != game::CellState::Visible_Visited) {
-                        game::enemy_grid[idx_to_shoot] -= 1;
+                        int next_value = game::enemy_grid[idx_to_shoot] - game::enemy_grid[game::player_position];
+                        game::enemy_grid[idx_to_shoot] = next_value >= 1 ? next_value : 1;
                     }
                     print_grid();
                     clear_logs();
@@ -175,8 +160,27 @@ skip_input:
                     printf("There is nothing to collect here\n");
                     break;
                 case game::Pickup::Crystal:
-                    printf("You found a crystal. Yeah!\n");
+                    printf("You found a crystal. Yeah! You can somehow use it to buy a new upgrade\n");
                     game::player_collected_crystals += 1;
+                    if (game::player_gold >= game::player_gold_to_next_upgrade) {
+                        printf("You can buy a new upgrade.\n");
+                        printf("Enter H to upgrade Health.\n");
+                        printf("Enter S to upgrade Stamina.\n");
+                        printf("Enter D to upgrade Damage.\n");
+
+                        fgets(input, 10, stdin);
+                        switch (input[0]) {
+                            case 'H': game::player_max_health += 3; break;
+                            case 'S': game::player_max_stamina += 3; break;
+                            case 'D': game::player_damage += 1; break;
+                        }
+
+                        game::player_gold -= game::player_gold_to_next_upgrade;
+                        game::player_gold_to_next_upgrade += 1;
+                        print_grid();
+                        print_stats();
+                        clear_logs();
+                    }
                     break;
                 default: break;
             }
@@ -300,6 +304,11 @@ void print_grid() {
                         value[0] = '0' + game::enemy_grid[grid_idx];
                     }
 
+                    if (debug_grid) {
+                        color = nullptr;
+                        value[0] = '0' + game::enemy_grid[grid_idx];
+                    }
+
                     current_char_idx += write(&grid_str[current_char_idx], value, col_per_cell, 1, TextAlignment::Center, color);
                     grid_str[current_char_idx++] = (i + 1) % 3 == 0 ? LINE_VERTICAL_DOUBLE : LINE_VERTICAL_SINGLE;
                 }
@@ -313,7 +322,7 @@ void print_grid() {
                     const wchar_t *color = nullptr;
                     const wchar_t *value = L"?";
 
-                    if (state != game::CellState::Unknown) {
+                    if (state != game::CellState::Unknown || debug_grid) {
                         color = state == game::CellState::Visible_Unvisited ? COLOR_RED : COLOR_GREEN;
                         switch ((game::Pickup)game::pickup_grid[grid_idx]) {
                             case game::Pickup::Life: value = L"Life"; break;
@@ -326,6 +335,10 @@ void print_grid() {
                             case game::Pickup::None: value = L"None"; break;
                             case game::Pickup::Crystal: value = L"Crystal"; break;
                         }
+                    }
+
+                    if (debug_grid) {
+                        color = nullptr;
                     }
 
                     current_char_idx += write(&grid_str[current_char_idx], value, col_per_cell, wcslen(value), TextAlignment::Center, color);
