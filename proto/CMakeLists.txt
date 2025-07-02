@@ -15,6 +15,10 @@ set(SDL3_include ${CMAKE_SOURCE_DIR}/deps/SDL/include)
 set(SDL3_lib ${CMAKE_SOURCE_DIR}/build/SDL3.lib)
 set(SDL3_shadercross_include ${CMAKE_SOURCE_DIR}/deps/SDL_shadercross/include)
 set(SDL3_shadercross_lib ${CMAKE_SOURCE_DIR}/build/SDL3_shadercross.lib)
+set(SDL3_ttf_include ${CMAKE_SOURCE_DIR}/deps/SDL_ttf/include)
+set(SDL3_ttf_lib ${CMAKE_SOURCE_DIR}/build/SDL3_ttf.lib)
+set(SDL3_image_include ${CMAKE_SOURCE_DIR}/deps/SDL_image/include)
+set(SDL3_image_lib ${CMAKE_SOURCE_DIR}/build/SDL3_image.lib)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}

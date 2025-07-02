@@ -21,7 +21,7 @@ int game::player_health = player_max_health;
 int game::player_previous_health;
 int game::player_max_stamina = 10;
 int game::player_stamina = 10;
-int game::player_damage = 10;
+int game::player_damage = 2;
 int game::player_damage_boost = 0;
 int game::player_gold = 0;
 int game::player_gold_to_next_upgrade = 1;
